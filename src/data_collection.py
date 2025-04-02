@@ -20,7 +20,7 @@ def worker(imu_q, emg_q):
 	m = Myo(mode=emg_mode.PREPROCESSED)
 	m.connect()
  
-	def add_to_imu_queue(quat, acc, gyro):
+	def add_to_imu_queue(quat, gyro, acc):
 		imu_data = [quat, acc, gyro]
 		imu_q.put(imu_data)
   
@@ -34,7 +34,6 @@ def worker(imu_q, emg_q):
 	# Orange logo and bar LEDs
 	m.set_leds([128, 128, 0], [128, 128, 0])
 	# Vibrate to know we connected okay
-	m.vibrate(1)
 	
 	"""worker function"""
 	print("Collecting data...")
@@ -62,6 +61,8 @@ if __name__ == "__main__":
 		os.mkdir(data_dir)
 	
 	data_files = os.listdir(data_dir)
+	data_files = [file for file in data_files if (participant + '_' + action) in file]
+
 	data_point_idx = len(data_files) + 1
 	file = participant + '_' + action + '_' + str(data_point_idx) + '.csv'
 
@@ -87,7 +88,6 @@ if __name__ == "__main__":
 				if not(emg_window.full()):
 					emg_window.put(emg)
 
-		print(len(emg_window.queue), len(imu_window.queue))
 		labels = [
 			"EMG_Ch1","EMG_Ch2","EMG_Ch3","EMG_Ch4",
 			"EMG_Ch5","EMG_Ch6","EMG_Ch7","EMG_Ch8",
@@ -100,7 +100,6 @@ if __name__ == "__main__":
 		emg_data = np.array(emg_window.queue)
 		data = np.hstack((emg_data, imu_data))
 		data = np.vstack((labels, data.astype(str)))
-		print(data[3, :])
 
 		np.savetxt(os.path.join(data_dir, file), data, delimiter=',', fmt='%s')
 		p.terminate()
