@@ -51,10 +51,6 @@ def get_dataset(participants : list, classes : list, num_features : int, batch_s
     dataset = dataset[:dataset.shape[0]-remainder]
     ground_truth = ground_truth[:ground_truth.shape[0]-remainder]
     
-    '''
-    dataset = np.reshape(dataset, (num_data_points//batch_size, batch_size, TIME_STEPS, num_features))
-    ground_truth = np.reshape(ground_truth, (num_data_points//batch_size, batch_size, len(classes)))
-    '''
     return train_test_split(dataset, ground_truth, test_size=0.2)
 
 
@@ -91,7 +87,6 @@ if __name__ == '__main__':
     print('Test score:', score[0])
     print('Test accuracy:', score[1] )
     
-    #x_val = np.reshape(x_val,(-1, BATCH_SIZE, TIME_STEPS, NUM_FEATURES))
     output = lstm_model.predict(x_val, batch_size=BATCH_SIZE)
     print(output.shape)
     predicted = np.argmax(output, axis=1)
