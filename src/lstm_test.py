@@ -1,13 +1,15 @@
 import multiprocessing
 from pyomyo import Myo, emg_mode
+import tensorflow as tf
 import os
 import sys
 import traceback
 import queue
 import numpy as np
 import pandas as pd
-import onnxruntime as rt
 import vgamepad as vg
+
+class_labels = ['idle', 'kick', 'pass', 'walk']
 
 def cls():
 	# Clear the screen in a cross platform way
@@ -45,22 +47,21 @@ def worker(imu_q, emg_q):
 
 # -------- Main Program Loop -----------
 if __name__ == "__main__":
-	# gamepad = vg.VX360Gamepad()
-	QUEUE_SIZE = 5
+	gamepad = vg.VX360Gamepad()
+	QUEUE_SIZE = 100
 
 	p = multiprocessing.Process(target=worker, args=(imu_q,emg_q))
 	p.start()
 
 	imu_window = queue.Queue(QUEUE_SIZE)
 	emg_window = queue.Queue(QUEUE_SIZE)
+	
 
 	# load the model
 	cwd = os.getcwd()
-	model_path = os.path.join(cwd, 'lstm_model.onnx')
-	sess = rt.InferenceSession(model_path)
-	input_name = sess.get_inputs()[0].name
+	model_path = os.path.join(cwd, 'lstm_model.keras')
+	model = tf.keras.models.load_model('lstm_model.keras')
 	# create a random input
-
 	while True:
 		try:
 			while not(imu_window.full()) or not(emg_window.full()):
@@ -87,31 +88,26 @@ if __name__ == "__main__":
 
 			emg_data = np.array(emg_window.queue)
 			data = np.hstack((emg_data, imu_data))
-
-			# # average the data over the queue
-			# # convert to dataframe
-			data = pd.DataFrame(data, columns=labels)
-			# average the data over the queue
-
-			# data = data.mean(axis=0)
-			data = data.astype(np.float32)
-			data = data.values.reshape(1, -1)
+			data = data.reshape(1, data.shape[0], data.shape[1])
 
 			# convert to numpy array
 			# run the model
-			preds = sess.run(None, {input_name: data})
-			print('{}\x1b[2K\r'.format(preds[0]))
-			# match preds[0]:
-			# 	case 'Idle':
-			# 		gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
-			# 		gamepad.update()
-			# 	case 'Walk':
-			# 		gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
-			# 		gamepad.update()
+			pred = np.argmax(model.predict(data, verbose=0), axis=1)
+			for i in range(10):
+				imu_window.queue.pop()
+				emg_window.queue.pop()
+				
+			
+			print(class_labels[pred[0]])
+			match class_labels[pred[0]]:
+				case 'idle':
+					gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+					gamepad.update()
+				case 'walk':
+					gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+					gamepad.update()
 			# clean queue
-			imu_window.queue.clear()
-			emg_window.queue.clear()
-
+			
 		except KeyboardInterrupt:
 			p.terminate()
 			print("Quitting")

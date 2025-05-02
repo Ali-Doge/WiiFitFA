@@ -8,8 +8,6 @@ from tensorflow.keras.preprocessing import sequence
 from tensorflow.keras.models import Sequential
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
-import tf2onnx
-import onnx
 import pandas as pd
 import os
 from random import shuffle
@@ -88,15 +86,11 @@ if __name__ == '__main__':
           batch_size=BATCH_SIZE, epochs=50, verbose=1,
           validation_data=(x_val, y_val))
     
-    input_signature = [tf.TensorSpec(lstm_model.inputs[0].shape, lstm_model.inputs[0].dtype, name='x')]
-    lstm_model.output_names = ['output']
-    # Use from_function for tf functions
-    onnx_model, _ = tf2onnx.convert.from_keras(lstm_model, input_signature, opset=13)
-    onnx.save(onnx_model, "./lstm_model.onnx")
-    
     score = lstm_model.evaluate(x_train, y_train, verbose=1, batch_size=BATCH_SIZE)
     print('Test score:', score[0])
     print('Test accuracy:', score[1] )
+
+    lstm_model.save('./src/lstm_model.keras')
     
     output = lstm_model.predict(x_val, batch_size=BATCH_SIZE)
     print(output.shape)
