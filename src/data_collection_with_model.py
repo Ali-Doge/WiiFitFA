@@ -23,7 +23,7 @@ def worker(imu_q, emg_q):
 	m.connect()
 
 	def add_to_imu_queue(quat, gyro, acc):
-		imu_data = [acc, gyro]
+		imu_data = [quat, acc, gyro]
 		imu_q.put(imu_data)
 
 	def add_to_emg_queue(emg, movement):
