@@ -72,6 +72,7 @@ def create_model():
     lstm_model.compile(loss='mean_squared_error', 
                     optimizer='adam',
                     metrics=['mae'])
+    
     return lstm_model
 
 if __name__ == '__main__':
@@ -81,11 +82,14 @@ if __name__ == '__main__':
     print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
     lstm_model = create_model()
 
+    print(x_train[0].shape[1], x_train[0].dtype)
+
     history = lstm_model.fit(x_train, y_train,
           batch_size=BATCH_SIZE, epochs=50, verbose=1,
           validation_data=(x_val, y_val))
     
-    input_signature = [tf.TensorSpec(x_train[0].shape, x_train[0].dtype, name='x')]
+    input_signature = [tf.TensorSpec(lstm_model.inputs[0].shape, lstm_model.inputs[0].dtype, name='x')]
+    lstm_model.output_names = ['output']
     # Use from_function for tf functions
     onnx_model, _ = tf2onnx.convert.from_keras(lstm_model, input_signature, opset=13)
     onnx.save(onnx_model, "./lstm_model.onnx")
