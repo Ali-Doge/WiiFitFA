@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = (10,10) # Make the figures a bit bigger
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM, Softmax
 from tensorflow.keras.preprocessing import sequence
@@ -8,6 +9,8 @@ from tensorflow.keras.models import Sequential
 from keras.utils import np_utils
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
+import tf2onnx
+import onnx
 import pandas as pd
 import os
 from random import shuffle
@@ -82,6 +85,11 @@ if __name__ == '__main__':
     history = lstm_model.fit(x_train, y_train,
           batch_size=BATCH_SIZE, epochs=50, verbose=1,
           validation_data=(x_val, y_val))
+    
+    input_signature = [tf.TensorSpec(x_train[0].shape, x_train[0].dtype, name='x')]
+    # Use from_function for tf functions
+    onnx_model, _ = tf2onnx.convert.from_keras(lstm_model, input_signature, opset=13)
+    onnx.save(onnx_model, "./lstm_model.onnx")
     
     score = lstm_model.evaluate(x_train, y_train, verbose=1, batch_size=BATCH_SIZE)
     print('Test score:', score[0])
