@@ -6,7 +6,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM, Softmax
 from tensorflow.keras.preprocessing import sequence
 from tensorflow.keras.models import Sequential
-from keras.utils import np_utils
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 import tf2onnx
@@ -59,7 +58,7 @@ def get_dataset(participants : list, classes : list, num_features : int, batch_s
 
 def create_model():
     lstm_model = Sequential()
-    lstm_model.add(LSTM(100, batch_input_shape=(BATCH_SIZE, TIME_STEPS, 
+    lstm_model.add(LSTM(100, input_shape=(TIME_STEPS, 
                                                 NUM_FEATURES), 
                                                 dropout=0.0, 
                                                 recurrent_dropout=0.0))
