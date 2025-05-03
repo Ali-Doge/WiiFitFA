@@ -48,6 +48,9 @@ def worker(imu_q, emg_q):
 # -------- Main Program Loop -----------
 if __name__ == "__main__":
 	gamepad = vg.VX360Gamepad()
+
+
+
 	QUEUE_SIZE = 100
 
 	p = multiprocessing.Process(target=worker, args=(imu_q,emg_q))
@@ -101,11 +104,20 @@ if __name__ == "__main__":
 			print(class_labels[pred[0]])
 			match class_labels[pred[0]]:
 				case 'idle':
-					gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+					gamepad.left_joystick_float(x_value_float=0, y_value_float=0)
 					gamepad.update()
 				case 'walk':
+					gamepad.left_joystick_float(x_value_float=0.5, y_value_float=0)
+					gamepad.update()
+					
+				case 'kick':
+					gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
+					gamepad.update()
+					gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
+				case 'pass':
 					gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
 					gamepad.update()
+					gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
 			# clean queue
 			
 		except KeyboardInterrupt:
