@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = (10,10) # Make the figures a bit bigger
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM, Softmax
 from tensorflow.keras.preprocessing import sequence
 from tensorflow.keras.models import Sequential
-from keras.utils import np_utils
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 import pandas as pd
@@ -56,7 +56,7 @@ def get_dataset(participants : list, classes : list, num_features : int, batch_s
 
 def create_model():
     lstm_model = Sequential()
-    lstm_model.add(LSTM(100, batch_input_shape=(BATCH_SIZE, TIME_STEPS, 
+    lstm_model.add(LSTM(100, input_shape=(TIME_STEPS, 
                                                 NUM_FEATURES), 
                                                 dropout=0.0, 
                                                 recurrent_dropout=0.0))
@@ -70,6 +70,7 @@ def create_model():
     lstm_model.compile(loss='mean_squared_error', 
                     optimizer='adam',
                     metrics=['mae'])
+    
     return lstm_model
 
 if __name__ == '__main__':
@@ -79,6 +80,8 @@ if __name__ == '__main__':
     print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
     lstm_model = create_model()
 
+    print(x_train[0].shape[1], x_train[0].dtype)
+
     history = lstm_model.fit(x_train, y_train,
           batch_size=BATCH_SIZE, epochs=50, verbose=1,
           validation_data=(x_val, y_val))
@@ -86,6 +89,8 @@ if __name__ == '__main__':
     score = lstm_model.evaluate(x_train, y_train, verbose=1, batch_size=BATCH_SIZE)
     print('Test score:', score[0])
     print('Test accuracy:', score[1] )
+
+    lstm_model.save('./src/lstm_model.keras')
     
     output = lstm_model.predict(x_val, batch_size=BATCH_SIZE)
     print(output.shape)
