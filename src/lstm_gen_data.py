@@ -66,9 +66,12 @@ if __name__ == '__main__':
 
     acc = 0
     for x,y in zip(x_test, y_test):
-        pred = np.argmax(lstm_model.predict(x, verbose=0))[0]
+        x = x.reshape(1, 100, 14)
+        y = np.argmax(y)
+        pred = np.argmax(lstm_model.predict(x, verbose=0))
         if y == pred:
             acc += 1
+    print(y_test.shape)
     acc = acc / len(y_test)
     print('Test Accuracy: ', acc)
 
