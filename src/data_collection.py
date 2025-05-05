@@ -1,3 +1,8 @@
+# The data collection script for the Myo armband 
+# was edited to provide a consistent 100 sample 
+# window. At 50Hz, this is 2 seconds of data.
+# Author: Tyler Talarico
+
 import multiprocessing
 from pyomyo import Myo, emg_mode
 import os
@@ -33,7 +38,7 @@ def worker(imu_q, emg_q):
 	
 	# Orange logo and bar LEDs
 	m.set_leds([128, 128, 0], [128, 128, 0])
-	# Vibrate to know we connected okay
+
 	
 	"""worker function"""
 	print("Collecting data...")
@@ -43,9 +48,13 @@ def worker(imu_q, emg_q):
 
 # -------- Main Program Loop -----------
 if __name__ == "__main__":
+	# 2 seconds of data at 50Hz = 100 samples
 	QUEUE_SIZE = 100
 
 	data_dir = './data'
+
+	# Arguments to provide easy data collection
+	# python data_collection.py <participant_name> <gesture_name>
 	args = sys.argv
 	if len(args) != 3:
 		print("Invalid number of args: must include participant name and gesture")
@@ -63,6 +72,7 @@ if __name__ == "__main__":
 	data_files = os.listdir(data_dir)
 	data_files = [file for file in data_files if (participant + '_' + action) in file]
 
+	# The sample count is iterated automatically
 	data_point_idx = len(data_files) + 1
 	file = participant + '_' + action + '_' + str(data_point_idx) + '.csv'
 
@@ -99,6 +109,7 @@ if __name__ == "__main__":
 
 		emg_data = np.array(emg_window.queue)
 		data = np.hstack((emg_data, imu_data))
+		# Combine label names for the header of the csv file
 		data = np.vstack((labels, data.astype(str)))
 
 		np.savetxt(os.path.join(data_dir, file), data, delimiter=',', fmt='%s')
