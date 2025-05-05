@@ -1,3 +1,6 @@
+# Evaluate the model on unseen data
+# Author: Tyler Talarico
+
 import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = (10,10) # Make the figures a bit bigger
 import numpy as np
